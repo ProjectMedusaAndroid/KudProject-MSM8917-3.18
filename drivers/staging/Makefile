@@ -48,3 +48,4 @@ obj-$(CONFIG_UNISYSSPAR)	+= unisys/
 obj-$(CONFIG_SEC_STI)		+= sti/
 obj-$(CONFIG_VNSWAP)		+= vnswap/
 obj-$(CONFIG_PRONTO_WLAN)	+= prima/
+obj-$(CONFIG_FRANDOM)		+= frandom/
