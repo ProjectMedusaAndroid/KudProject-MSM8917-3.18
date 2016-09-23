@@ -1907,8 +1907,6 @@ static int cpufreq_governor_interactive(struct cpufreq_policy *policy,
 		mutex_lock(&gov_lock);
 
 		freq_table = cpufreq_frequency_get_table(policy->cpu);
-		if (!tunables->hispeed_freq)
-			tunables->hispeed_freq = policy->max;
 #if defined(CONFIG_ARCH_MSM8953) || defined(CONFIG_ARCH_MSM8917)
 		if (!tunables->lpm_disable_freq)
 			tunables->lpm_disable_freq = policy->max;
