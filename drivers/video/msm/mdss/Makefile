@@ -84,3 +84,5 @@ obj-$(CONFIG_FB_MSM_MDSS) += mdss_livedisplay.o
 
 # KCAL
 obj-$(CONFIG_FB_MSM_MDSS_KCAL_CTRL) += mdss_mdp_kcal_ctrl.o
+
+obj-$(CONFIG_FB_MSM_MDSS) += lcd_notify.o
