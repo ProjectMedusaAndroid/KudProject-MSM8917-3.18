@@ -109,4 +109,6 @@ obj-$(CONFIG_MSM_REMOTEQDSS) += remoteqdss.o
 obj-$(CONFIG_QCOM_SMCINVOKE) += smcinvoke.o
 obj-$(CONFIG_QCOM_EARLY_RANDOM)	+= early_random.o
 obj-$(CONFIG_MSM_HAB) += hab/
+obj-$(CONFIG_STATE_NOTIFIER)   += state_notifier.o
+
 obj-$(CONFIG_QCOM_QDSS_BRIDGE) += qdss_bridge.o

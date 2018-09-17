@@ -928,3 +928,10 @@ config WCD_DSP_GLINK
 source "drivers/soc/qcom/memshare/Kconfig"
 
 endif # ARCH_MSM
+
+config STATE_NOTIFIER
+	bool "State Notifier"
+	default n
+	help
+	  A unified display state notifier for kernel drivers for easy porting
+	  between different devices.
