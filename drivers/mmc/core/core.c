@@ -4239,7 +4239,7 @@ static int __init mmc_init(void)
 
 	ret = mmc_register_bus();
 	if (ret)
-		return ret;
+		    return ret;
 
 	ret = mmc_register_host_class();
 	if (ret)
