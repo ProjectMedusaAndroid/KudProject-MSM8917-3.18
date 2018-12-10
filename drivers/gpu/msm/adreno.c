@@ -361,7 +361,7 @@ void adreno_fault_detect_stop(struct adreno_device *adreno_dev)
  * somebody will start using the GPU or the idle timer will fire and put the
  * GPU back into slumber.
  */
-static void adreno_input_work(struct work_struct *work)
+static void adreno_pwr_on_work(struct work_struct *work)
 {
 	struct adreno_device *adreno_dev = container_of(work,
 			struct adreno_device, input_work);
@@ -369,22 +369,8 @@ static void adreno_input_work(struct work_struct *work)
 
 	mutex_lock(&device->mutex);
 
-	device->flags |= KGSL_FLAG_WAKE_ON_TOUCH;
-
-	/*
-	 * Don't schedule adreno_start in a high priority workqueue, we are
-	 * already in a workqueue which should be sufficient
-	 */
 	kgsl_pwrctrl_change_state(device, KGSL_STATE_ACTIVE);
 
-	/*
-	 * When waking up from a touch event we want to stay active long enough
-	 * for the user to send a draw command.  The default idle timer timeout
-	 * is shorter than we want so go ahead and push the idle timer out
-	 * further for this special case
-	 */
-	mod_timer(&device->idle_timer,
-		jiffies + msecs_to_jiffies(adreno_wake_timeout));
 	mutex_unlock(&device->mutex);
 }
 
@@ -896,7 +882,7 @@ static int adreno_of_get_power(struct adreno_device *adreno_dev,
 		device->pwrctrl.pm_qos_wakeup_latency = 100;
 
 	if (of_property_read_u32(node, "qcom,idle-timeout", &timeout))
-		timeout = 64;
+		timeout = 80;
 
 	device->pwrctrl.interval_timeout = msecs_to_jiffies(timeout);
 
@@ -1052,23 +1038,6 @@ static int adreno_probe(struct platform_device *pdev)
 
 	kgsl_pwrscale_init(&pdev->dev, CONFIG_MSM_ADRENO_DEFAULT_GOVERNOR);
 
-	/* Initialize coresight for the target */
-	adreno_coresight_init(adreno_dev);
-
-#ifdef CONFIG_INPUT
-	if (!device->pwrctrl.input_disable) {
-		adreno_input_handler.private = device;
-		/*
-		 * It isn't fatal if we cannot register the input handler.  Sad,
-		 * perhaps, but not fatal
-		 */
-		if (input_register_handler(&adreno_input_handler)) {
-			adreno_input_handler.private = NULL;
-			KGSL_DRV_ERR(device,
-				"Unable to register the input handler\n");
-		}
-	}
-#endif
 out:
 	if (status) {
 		adreno_ringbuffer_close(adreno_dev);
@@ -2364,9 +2333,6 @@ int adreno_spin_idle(struct adreno_device *adreno_dev, unsigned int timeout)
 
 		if (adreno_isidle(KGSL_DEVICE(adreno_dev)))
 			return 0;
-
-		/* relax tight loop */
-		cond_resched();
 
 	} while (time_before(jiffies, wait));
 
