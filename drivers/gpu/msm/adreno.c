@@ -350,6 +350,13 @@ void adreno_fault_detect_stop(struct adreno_device *adreno_dev)
 	adreno_dev->fast_hang_detect = 0;
 }
 
+/*
+ * A workqueue callback responsible for actually turning on the GPU after a
+ * touch event. kgsl_pwrctrl_change_state(ACTIVE) is used without any
+ * active_count protection to avoid the need to maintain state.  Either
+ * somebody will start using the GPU or the idle timer will fire and put the
+ * GPU back into slumber.
+ */
 static void adreno_pwr_on_work(struct work_struct *work)
 {
 	struct adreno_device *adreno_dev =
@@ -357,7 +364,9 @@ static void adreno_pwr_on_work(struct work_struct *work)
 	struct kgsl_device *device = KGSL_DEVICE(adreno_dev);
 
 	mutex_lock(&device->mutex);
+
 	kgsl_pwrctrl_change_state(device, KGSL_STATE_ACTIVE);
+
 	mutex_unlock(&device->mutex);
 }
 
@@ -756,7 +765,7 @@ static int adreno_of_get_power(struct adreno_device *adreno_dev,
 		device->pwrctrl.pm_qos_wakeup_latency = 100;
 
 	if (of_property_read_u32(node, "qcom,idle-timeout", &timeout))
-		timeout = 64;
+		timeout = 80;
 
 	device->pwrctrl.interval_timeout = msecs_to_jiffies(timeout);
 
@@ -912,8 +921,6 @@ static int adreno_probe(struct platform_device *pdev)
 
 	kgsl_pwrscale_init(&pdev->dev, CONFIG_MSM_ADRENO_DEFAULT_GOVERNOR);
 
-	/* Initialize coresight for the target */
-	adreno_coresight_init(adreno_dev);
 out:
 	if (status) {
 		adreno_ringbuffer_close(adreno_dev);
@@ -2205,9 +2212,6 @@ int adreno_spin_idle(struct adreno_device *adreno_dev, unsigned int timeout)
 
 		if (adreno_isidle(KGSL_DEVICE(adreno_dev)))
 			return 0;
-
-		/* relax tight loop */
-		cond_resched();
 
 	} while (time_before(jiffies, wait));
 
