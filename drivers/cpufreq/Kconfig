@@ -178,6 +178,49 @@ config CPU_FREQ_DEFAULT_GOV_ELECTRON
 	  you to get a full dynamic cpu frequency capable system by simply
 	  loading your cpufreq low-level hardware driver, using the
 	  'electron' governor for latency-sensitive workloads.
+
+config CPU_FREQ_DEFAULT_GOV_LIONFISH
+	bool "lionfish"
+	select CPU_FREQ_GOV_LIONFISH
+	help
+	  Use the CPUFreq governor 'lionfish' as default.
+
+ config CPU_FREQ_DEFAULT_GOV_LIONHEART
+        bool "lionheart"
+        select CPU_FREQ_GOV_LIONHEART
+        help
+           Use the CPUFreq governor 'lionheart' as default.
+
+config CPU_FREQ_DEFAULT_GOV_SMARTMAX
+        bool "smartmax"
+        select CPU_FREQ_GOV_SMARTMAX
+        help
+           Use the CPUFreq governor 'smartmax' as default.
+	
+config CPU_FREQ_DEFAULT_GOV_SMARTMAX_EPS
+        bool "smartmax_eps"
+        select CPU_FREQ_GOV_SMARTMAX_EPS
+        help
+			Use the CPUFreq governor 'smartmax_eps' as default. 
+
+ config CPU_FREQ_DEFAULT_GOV_IMPULSE
+	bool "impulse"
+	select CPU_FREQ_GOV_IMPULSE
+	help
+	  Use the CPUFreq governor 'impulse' as default. This allows
+	  you to get a full dynamic cpu frequency capable system by simply
+	  loading your cpufreq low-level hardware driver, using the
+	  'impulse' governor for latency-sensitive workloads.
+
+config CPU_FREQ_DEFAULT_GOV_INTELLIACTIVE
+	bool "intelliactive"
+	select CPU_FREQ_GOV_INTELLIACTIVE
+	help
+	  Use the CPUFreq governor 'intelliactive' as default. This allows
+	  you to get a full dynamic cpu frequency capable system by simply
+	  loading your cpufreq low-level hardware driver, using the
+	  'interactive' governor for latency-sensitive workloads.
+
 endchoice
 
 config CPU_FREQ_GOV_PERFORMANCE
@@ -332,6 +375,11 @@ config CPU_FREQ_GOV_SCHED
 	  If in doubt, say N.
 
 comment "CPU frequency scaling drivers"
+	  
+config CPU_FREQ_GOV_SMARTMAX_EPS
+        tristate "'smartmax_eps' cpufreq governor"
+        depends on CPU_FREQ
+        help
 
 config CPUFREQ_DT
 	tristate "Generic DT based cpufreq driver"
