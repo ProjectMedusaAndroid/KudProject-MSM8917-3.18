@@ -191,14 +191,26 @@ config CPU_FREQ_DEFAULT_GOV_SMARTMAX_EPS
         help
 	  Use the CPUFreq governor 'smartmax_eps' as default. 
 
- config CPU_FREQ_DEFAULT_GOV_IMPULSE
-	bool "impulse"
-	select CPU_FREQ_GOV_IMPULSE
-	help
-	  Use the CPUFreq governor 'impulse' as default. This allows
-	  you to get a full dynamic cpu frequency capable system by simply
-	  loading your cpufreq low-level hardware driver, using the
-	  'impulse' governor for latency-sensitive workloads.
+config CPU_FREQ_DEFAULT_GOV_IMPULSE
+        bool "impulse"
+        select CPU_FREQ_GOV_IMPULSE
+        help
+          Use the CPUFreq governor 'impulse' as default. This allows
+          you to get a full dynamic cpu frequency capable system by simply
+          loading your cpufreq low-level hardware driver, using the
+          'impulse' governor for latency-sensitive workloads.
+
+config CPU_FREQ_DEFAULT_GOV_LIONHEART
+        bool "lionheart"
+        select CPU_FREQ_GOV_LIONHEART
+        help
+           Use the CPUFreq governor 'lionheart' as default.
+
+config CPU_FREQ_DEFAULT_GOV_SMARTMAX
+        bool "smartmax"
+        select CPU_FREQ_GOV_SMARTMAX
+        help
+           Use the CPUFreq governor 'smartmax' as default.
 
 config CPU_FREQ_DEFAULT_GOV_INTELLIACTIVE
 	bool "intelliactive"
@@ -403,12 +415,25 @@ config CPUFREQ_DT
 
 	  If in doubt, say N.
 
-
 config CPU_FREQ_GOV_ELECTRON
 	tristate "'electron' cpufreq governor"
 	depends on CPU_FREQ
 	help
 	  'electron' - another tuned interactive with extra options
+
+config CPU_FREQ_GOV_SMARTMAX
+        tristate "'smartmax' cpufreq governor"
+        depends on CPU_FREQ
+        help
+           smartmax' - a "smart" optimized governor!
+           If in doubt, say N.
+
+config CPU_FREQ_GOV_LIONHEART
+        tristate "'lionheart' cpufreq governor"
+        depends on CPU_FREQ
+        help
+           lionheart' - a "smart" optimized governor!
+           If in doubt, say N.
 
 config CPU_BOOST
 	tristate "Event base short term CPU freq boost"
