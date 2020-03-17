@@ -142,6 +142,18 @@ config CPU_FREQ_DEFAULT_GOV_SMARTMAX_EPS
         help
 	  Use the CPUFreq governor 'smartmax_eps' as default. 
 
+config CPU_FREQ_DEFAULT_GOV_LIONHEART
+        bool "lionheart"
+        select CPU_FREQ_GOV_LIONHEART
+        help
+           Use the CPUFreq governor 'lionheart' as default.
+
+config CPU_FREQ_DEFAULT_GOV_SMARTMAX
+        bool "smartmax"
+        select CPU_FREQ_GOV_SMARTMAX
+        help
+           Use the CPUFreq governor 'smartmax' as default.
+
 endchoice
 
 config CPU_FREQ_GOV_PERFORMANCE
@@ -291,6 +303,20 @@ config CPUFREQ_DT
 	  systems which share clock and voltage across all CPUs.
 
 	  If in doubt, say N.
+
+config CPU_FREQ_GOV_SMARTMAX
+        tristate "'smartmax' cpufreq governor"
+        depends on CPU_FREQ
+        help
+           smartmax' - a "smart" optimized governor!
+           If in doubt, say N.
+
+config CPU_FREQ_GOV_LIONHEART
+        tristate "'lionheart' cpufreq governor"
+        depends on CPU_FREQ
+        help
+           lionheart' - a "smart" optimized governor!
+           If in doubt, say N.
 
 config CPU_BOOST
 	tristate "Event base short term CPU freq boost"
