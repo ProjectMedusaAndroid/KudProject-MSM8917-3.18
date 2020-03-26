@@ -1533,7 +1533,6 @@ static struct ctl_table vm_table[] = {
 		.mode		= 0644,
 		.proc_handler	= proc_dointvec_minmax,
 		.extra1		= &zero,
-		.extra2		= &one_hundred,
 	},
 #ifdef CONFIG_HUGETLB_PAGE
 	{
