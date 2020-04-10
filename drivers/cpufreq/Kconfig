@@ -185,23 +185,11 @@ config CPU_FREQ_DEFAULT_GOV_LIONFISH
 	help
 	  Use the CPUFreq governor 'lionfish' as default.
 
- config CPU_FREQ_DEFAULT_GOV_LIONHEART
-        bool "lionheart"
-        select CPU_FREQ_GOV_LIONHEART
-        help
-           Use the CPUFreq governor 'lionheart' as default.
-
-config CPU_FREQ_DEFAULT_GOV_SMARTMAX
-        bool "smartmax"
-        select CPU_FREQ_GOV_SMARTMAX
-        help
-           Use the CPUFreq governor 'smartmax' as default.
-	
 config CPU_FREQ_DEFAULT_GOV_SMARTMAX_EPS
         bool "smartmax_eps"
         select CPU_FREQ_GOV_SMARTMAX_EPS
         help
-			Use the CPUFreq governor 'smartmax_eps' as default. 
+	  Use the CPUFreq governor 'smartmax_eps' as default. 
 
  config CPU_FREQ_DEFAULT_GOV_IMPULSE
 	bool "impulse"
@@ -220,7 +208,6 @@ config CPU_FREQ_DEFAULT_GOV_INTELLIACTIVE
 	  you to get a full dynamic cpu frequency capable system by simply
 	  loading your cpufreq low-level hardware driver, using the
 	  'interactive' governor for latency-sensitive workloads.
-
 endchoice
 
 config CPU_FREQ_GOV_PERFORMANCE
@@ -380,6 +367,28 @@ config CPU_FREQ_GOV_SMARTMAX_EPS
         tristate "'smartmax_eps' cpufreq governor"
         depends on CPU_FREQ
         help
+
+config CPU_FREQ_GOV_LIONFISH
+	tristate "'lionfish' governor"
+	depends on CPU_FREQ
+	help
+	  'lionfish' - this is an improved version of the conservative governor
+	  that is optimized for smartphones. To avoid lag, it quickly jumps
+	  to an intermediate frequency when high load is encountered at low
+	  frequencies. If very high load is encountered above this intermediate
+	  frequency, it jumps to a high frequency. For moderate loads, it
+	  votes to increase, decrease, or maintain frequencies at each sampling
+	  interval. When enough votes are gathered to raise or lower the
+	  frequency, the frequency is changed. This mechanism reduces jitter
+	  compared to the conservative governor. Lionfish uses proportional
+	  ramping to more quickly reach suitable frequencies compared to the
+	  conservative governor. By default, Lionfish also reduces frequencies
+	  more aggressively than the conservative governor when loads are reduced.
+
+	  To compile this driver as a module, choose M here: the
+	  module will be called cpufreq_lionfish.
+
+	  If in doubt, say N.
 
 config CPUFREQ_DT
 	tristate "Generic DT based cpufreq driver"
