@@ -15,7 +15,7 @@ export ARCH=arm
 export SUBARCH=arm
 
 # Set kernel name and defconfig
-export VERSION=MedusaKernel-v1.7-NeMutluTürkümDiyene
+export VERSION=MedusaKernel-v1.7-CodeAuroraForum
 export DEFCONFIG=j4primelte_caf_defconfig
 
 # Keep it as is
