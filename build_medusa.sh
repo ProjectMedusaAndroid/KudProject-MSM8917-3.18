@@ -115,7 +115,7 @@ if [ $BUILD_SUCCESS != 0 ]
 		exit
 fi
 
-clear
 
 echo -e "$green Build completed in $(($DIFF / 60)) minute(s) and $(($DIFF % 60)) seconds $reset"
-done
+
+exit
