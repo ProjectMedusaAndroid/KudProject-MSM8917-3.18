@@ -3053,6 +3053,8 @@ static int mdss_dsi_event_handler(struct mdss_panel_data *pdata,
 		if (ctrl_pdata->off_cmds.link_state == DSI_LP_MODE)
 			rc = mdss_dsi_blank(pdata, power_state);
 		rc = mdss_dsi_off(pdata, power_state);
+		reinit_completion(&ctrl_pdata->wake_comp);
+		atomic_set(&ctrl_pdata->disp_en, MDSS_DISPLAY_OFF);
 #ifdef CONFIG_STATE_NOTIFIER
 		state_suspend();
 #endif
