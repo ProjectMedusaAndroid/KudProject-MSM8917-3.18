@@ -3,6 +3,9 @@
  *
  * Copyright 2012 Alucard_24@XDA
  *
+ *
+ * Copyright 2018 pascua28@XDA
+ *
  * This software is licensed under the terms of the GNU General Public
  * License version 2, as published by the Free Software Foundation, and
  * may be copied, distributed, and modified under those terms.
@@ -57,13 +60,11 @@ static struct hotplug_tuners {
 	unsigned int hotplug_enable;
 	unsigned int min_cpus_online;
 	unsigned int maxcoreslimit;
-    unsigned int maxcoreslimit_sleep;
 	unsigned int hp_io_is_busy;
 #if defined(CONFIG_POWERSUSPEND) || \
 	defined(CONFIG_HAS_EARLYSUSPEND)
 	unsigned int hotplug_suspend;
 	bool suspended;
-    bool force_cpu_up;
 	struct mutex alu_hotplug_mutex;
 #endif
 } hotplug_tuners_ins = {
@@ -71,13 +72,11 @@ static struct hotplug_tuners {
 	.hotplug_enable = 1,
 	.min_cpus_online = 2,
 	.maxcoreslimit = 4,
-    .maxcoreslimit_sleep = 1,
-	.hp_io_is_busy = 0,
+	.hp_io_is_busy = 1,
 #if defined(CONFIG_POWERSUSPEND) || \
 	defined(CONFIG_HAS_EARLYSUSPEND)
-	.hotplug_suspend = 0,
+	.hotplug_suspend = 1,
 	.suspended = false,
-    .force_cpu_up = false,
 #endif
 };
 
@@ -167,24 +166,19 @@ static void __ref hotplug_work_fn(struct work_struct *work)
 	int online_cpus = 0;
 	unsigned int rq_avg;
 
-#if defined(CONFIG_POWERSUSPEND) || \
-	defined(CONFIG_HAS_EARLYSUSPEND)
-	bool force_up = hotplug_tuners_ins.force_cpu_up;
-#endif
 	HOTPLUG_STATUS hotplug_onoff[NR_CPUS] = {IDLE, IDLE, IDLE, IDLE};
 	int delay;
 	int io_busy = hotplug_tuners_ins.hp_io_is_busy;
 
 	rq_avg = get_nr_run_avg();
+    upmaxcoreslimit = hotplug_tuners_ins.maxcoreslimit;
 
 #if defined(CONFIG_POWERSUSPEND) || \
 	defined(CONFIG_HAS_EARLYSUSPEND)
 	if (hotplug_tuners_ins.suspended)
-        upmaxcoreslimit = hotplug_tuners_ins.maxcoreslimit_sleep;
-	else
+		return;
 #endif
 
-        upmaxcoreslimit = hotplug_tuners_ins.maxcoreslimit;
 	get_online_cpus();
 	online_cpus = num_online_cpus();
 	for_each_online_cpu(cpu) {
@@ -246,12 +240,8 @@ static void __ref hotplug_work_fn(struct work_struct *work)
 					pcpu_info->cur_down_rate = 1;
 					++offline_cpu;
 					continue;
-#if defined(CONFIG_POWERSUSPEND) || \
-	defined(CONFIG_HAS_EARLYSUSPEND)
-			} else if (force_up == true || (online_cpus + online_cpu) < min_cpus_online) {
-#else
 			} else if ((online_cpus + online_cpu) < min_cpus_online) {
-#endif
+
 					if (upcpu < upmaxcoreslimit) {
 						if (!cpu_online(upcpu)) {
 							hotplug_onoff[upcpu] = ON;
@@ -309,11 +299,6 @@ static void __ref hotplug_work_fn(struct work_struct *work)
 			cpu_down(cpu);
 	}
 
-#if defined(CONFIG_POWERSUSPEND) || \
-	defined(CONFIG_HAS_EARLYSUSPEND)
-	if (force_up == true)
-		hotplug_tuners_ins.force_cpu_up = false;
-#endif
 
 	delay = msecs_to_jiffies(hotplug_tuners_ins.hotplug_sampling_rate);
 
@@ -328,6 +313,21 @@ static void __ref hotplug_work_fn(struct work_struct *work)
 							  delay);
 }
 
+static void wakeup_boost()
+{
+	unsigned int cpu;
+	for_each_possible_cpu(cpu) {
+		if (!cpu_online(cpu))
+			cpu_up(cpu);
+	}
+
+	msleep(2500);
+	INIT_DELAYED_WORK(&alucard_hotplug_work, hotplug_work_fn);
+	queue_delayed_work_on(0, alucardhp_wq, &alucard_hotplug_work,
+			msecs_to_jiffies(hotplug_tuners_ins.hotplug_sampling_rate));
+
+}
+
 #if defined(CONFIG_POWERSUSPEND) || defined(CONFIG_HAS_EARLYSUSPEND)
 #ifdef CONFIG_POWERSUSPEND
 static void __ref alucard_hotplug_suspend(struct power_suspend *handler)
@@ -335,11 +335,18 @@ static void __ref alucard_hotplug_suspend(struct power_suspend *handler)
 static void __ref alucard_hotplug_early_suspend(struct early_suspend *handler)
 #endif
 {
-        if (hotplug_tuners_ins.hotplug_enable > 0
+    unsigned int cpu;
+	if (hotplug_tuners_ins.hotplug_enable == 1
 		&& hotplug_tuners_ins.hotplug_suspend == 1) { 
 			mutex_lock(&hotplug_tuners_ins.alu_hotplug_mutex);
 			hotplug_tuners_ins.suspended = true;
 			mutex_unlock(&hotplug_tuners_ins.alu_hotplug_mutex);
+            cancel_delayed_work_sync(&alucard_hotplug_work);
+            for_each_possible_cpu(cpu)
+				if (cpu != 0 && cpu_online(cpu))
+					cpu_down(cpu);
+
+			cpu_up(1);
     }
 }
 
@@ -350,13 +357,13 @@ static void __ref alucard_hotplug_late_resume(
 				struct early_suspend *handler)
 #endif
 {
-	if (hotplug_tuners_ins.hotplug_enable > 0
+	if (hotplug_tuners_ins.hotplug_enable == 1
 		&& hotplug_tuners_ins.hotplug_suspend == 1) {
 			mutex_lock(&hotplug_tuners_ins.alu_hotplug_mutex);
 			hotplug_tuners_ins.suspended = false;
 			// wake up everyone
-            hotplug_tuners_ins.force_cpu_up = true;
 			mutex_unlock(&hotplug_tuners_ins.alu_hotplug_mutex);
+	wakeup_boost();
     }
 }
 
@@ -395,7 +402,6 @@ static int hotplug_start(void)
 #if defined(CONFIG_POWERSUSPEND) || \
 	defined(CONFIG_HAS_EARLYSUSPEND)
 	hotplug_tuners_ins.suspended = false;
-    hotplug_tuners_ins.force_cpu_up = false;
 #endif
 
 	get_online_cpus();
@@ -462,7 +468,6 @@ show_one(hotplug_sampling_rate, hotplug_sampling_rate);
 show_one(hotplug_enable, hotplug_enable);
 show_one(min_cpus_online, min_cpus_online);
 show_one(maxcoreslimit, maxcoreslimit);
-show_one(maxcoreslimit_sleep, maxcoreslimit_sleep);
 show_one(hp_io_is_busy, hp_io_is_busy);
 #if defined(CONFIG_POWERSUSPEND) || \
 	defined(CONFIG_HAS_EARLYSUSPEND)
@@ -637,13 +642,13 @@ static ssize_t store_hotplug_enable(struct kobject *a, struct attribute *b,
 	if (hotplug_tuners_ins.hotplug_enable == input)
 		return count;
 
-	if (input > 0)
+	if (input > 0) {
 		cpus_hotplugging(1);
 	else
 		cpus_hotplugging(0);
 
 	return count;
-
+    }
 
 /* min_cpus_online */
 static ssize_t store_min_cpus_online(struct kobject *a, struct attribute *b,
@@ -687,28 +692,6 @@ static ssize_t store_maxcoreslimit(struct kobject *a, struct attribute *b,
 	return count;
 }
 
-/* maxcoreslimit_sleep */
-static ssize_t store_maxcoreslimit_sleep(struct kobject *a,
-				struct attribute *b,
-				const char *buf, size_t count)
-{
-	int input;
-	int ret;
-
-	ret = sscanf(buf, "%u", &input);
-	if (ret != 1)
-		return -EINVAL;
-
-	input = max(input > NR_CPUS ? NR_CPUS : input, 1);
-
-	if (hotplug_tuners_ins.maxcoreslimit_sleep == input)
-		return count;
-
-	hotplug_tuners_ins.maxcoreslimit_sleep = input;
-
-	return count;
-}
-
 /* hp_io_is_busy */
 static ssize_t store_hp_io_is_busy(struct kobject *a, struct attribute *b,
 				   const char *buf, size_t count)
@@ -729,7 +712,7 @@ static ssize_t store_hp_io_is_busy(struct kobject *a, struct attribute *b,
 	hotplug_tuners_ins.hp_io_is_busy = !!input;
 #ifndef CONFIG_ALUCARD_HOTPLUG_USE_CPU_UTIL
 	/* we need to re-evaluate prev_cpu_idle */
-	if (hotplug_tuners_ins.hotplug_enable > 0) {
+	if (hotplug_tuners_ins.hotplug_enable == 1) {
 		for_each_online_cpu(j) {
 			struct hotplug_cpuinfo *pcpu_info = &per_cpu(od_hotplug_cpuinfo, j);
 			pcpu_info->prev_cpu_idle = get_cpu_idle_time(j,
@@ -778,7 +761,6 @@ define_one_global_rw(hotplug_sampling_rate);
 define_one_global_rw(hotplug_enable);
 define_one_global_rw(min_cpus_online);
 define_one_global_rw(maxcoreslimit);
-define_one_global_rw(maxcoreslimit_sleep);
 define_one_global_rw(hp_io_is_busy);
 #if defined(CONFIG_POWERSUSPEND) || \
 	defined(CONFIG_HAS_EARLYSUSPEND)
@@ -814,7 +796,6 @@ static struct attribute *alucard_hotplug_attributes[] = {
 	&hotplug_rate_4_0.attr,
 	&min_cpus_online.attr,
 	&maxcoreslimit.attr,
-    &maxcoreslimit_sleep.attr,
 	&hp_io_is_busy.attr,
 #if defined(CONFIG_POWERSUSPEND) || \
 	defined(CONFIG_HAS_EARLYSUSPEND)
@@ -877,7 +858,7 @@ static int __init alucard_hotplug_init(void)
 		pcpu_info->down_rate = hotplug_rate[cpu][DOWN_INDEX];
 	}
 
-	if (hotplug_tuners_ins.hotplug_enable > 0) {
+	if (hotplug_tuners_ins.hotplug_enable == 1) {
 		hotplug_start();
 	}
 
@@ -886,7 +867,7 @@ static int __init alucard_hotplug_init(void)
 
 static void __exit alucard_hotplug_exit(void)
 {
-	if (hotplug_tuners_ins.hotplug_enable > 0) {
+	if (hotplug_tuners_ins.hotplug_enable == 1) {
 		hotplug_stop();
 	}
 
