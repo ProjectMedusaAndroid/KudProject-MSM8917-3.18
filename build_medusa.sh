@@ -16,7 +16,7 @@ export SUBARCH=arm
 
 # Set kernel name and defconfig
 export VERSION=MedusaKernel-v1.7-CodeAuroraForum
-export DEFCONFIG=j4primelte_caf_defconfig
+export DEFCONFIG=j4j6unified_caf_defconfig
 
 # Keep it as is
 export LOCALVERSION=-$VERSION
