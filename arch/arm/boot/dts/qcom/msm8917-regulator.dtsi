@@ -553,17 +553,7 @@
 		qcom,cpr-fuse-quot-offset-scale = <5 5 5>;
 		qcom,cpr-init-voltage-step = <10000>;
 		qcom,cpr-corner-map = <1 2 3 3 3 3 3 3 3 3>;
-		qcom,cpr-voltage-ceiling-override =
-				<0xffffffff 0xffffffff 1050000 1120000 1200000 1200000 1200000
-						       1225000 1350000 1350000 1350000 1350000>;
-		qcom,cpr-voltage-floor-override =
-				<0xffffffff 0xffffffff 1050000 1050000 1090000 1090000 1090000
-						       1150000 1200000 1200000 1200000 1200000>;
 		qcom,cpr-corner-frequency-map =
-				<1 200000000>,
-				<1 400000000>,
-				<1 533000000>,
-				<1 800000000>,
 				<1 960000000>,
 				<2 1094400000>,
 				<3 1248000000>,
