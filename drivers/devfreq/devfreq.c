@@ -821,11 +821,11 @@ static ssize_t governor_store(struct device *dev, struct device_attribute *attr,
 	if (strncmp(str_governor, "cpufreq", DEVFREQ_NAME_LEN) &&
 		strncmp(str_governor, "msm-adreno-tz", DEVFREQ_NAME_LEN) &&
 		strncmp(str_governor, "performance", DEVFREQ_NAME_LEN) &&
-		strncmp(str_governor, "powersave", DEVFREQ_NAME_LEN) &&
+		strncmp(str_governor, "powersave", DEVFREQ_NAME_LEN)	 &&
 		strncmp(str_governor, "simple_ondemand", DEVFREQ_NAME_LEN) &&
-		strncmp(str_governor, "userspace", DEVFREQ_NAME_LEN))
-		strncmp(str_governor, "msm-adreno-plus", DEVFREQ_NAME_LEN))
-		strncmp(str_governor, "balanced", DEVFREQ_NAME_LEN))
+		strncmp(str_governor, "userspace", DEVFREQ_NAME_LEN) &&
+		strncmp(str_governor, "msm-adreno-plus", DEVFREQ_NAME_LEN) &&
+		strncmp(str_governor, "balanced", DEVFREQ_NAME_LEN) &&
 		strncmp(str_governor, "guardian", DEVFREQ_NAME_LEN))
 		return -EINVAL;
 
