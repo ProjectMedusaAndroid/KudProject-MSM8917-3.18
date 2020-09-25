@@ -16,18 +16,16 @@
 
 enum zen_data_dir { ASYNC, SYNC };
 
-static const int sync_expire  = HZ / 2;    /* max time before a sync is submitted. */
-static const int async_expire = 5 * HZ;    /* ditto for async, these limits are SOFT! */
-static const int fifo_batch = 1;
+static const int sync_expire  = HZ / 2;
+static const int async_expire = 5 * HZ;
+static const int fifo_batch = 16;
 
 struct zen_data {
-	/* Runtime Data */
-	/* Requests are only present on fifo_list */
+
 	struct list_head fifo_list[2];
 
-	unsigned int batching;		/* number of sequential requests made */
+	unsigned int batching;
 
-	/* tunables */
 	int fifo_expire[2];
 	int fifo_batch;
 };
@@ -43,10 +41,6 @@ static void
 zen_merged_requests(struct request_queue *q, struct request *req,
                     struct request *next)
 {
-	/*
-	 * if next expires before rq, assign its expire time to arq
-	 * and move into next position (next will be deleted) in fifo
-	 */
 	if (!list_empty(&req->queuelist) && !list_empty(&next->queuelist)) {
 		if (time_before(next->fifo_time, req->fifo_time)) {
 			list_move(&req->queuelist, &next->queuelist);
@@ -54,7 +48,6 @@ zen_merged_requests(struct request_queue *q, struct request *req,
 		}
 	}
 
-	/* next request is gone */
 	rq_fifo_clear(next);
 }
 
@@ -71,17 +64,12 @@ static void zen_add_request(struct request_queue *q, struct request *rq)
 
 static void zen_dispatch(struct zen_data *zdata, struct request *rq)
 {
-	/* Remove request from list and dispatch it */
 	rq_fifo_clear(rq);
 	elv_dispatch_add_tail(rq->q, rq);
 
-	/* Increment # of sequential requests */
 	zdata->batching++;
 }
 
-/*
- * get the first expired request in direction ddir
- */
 static struct request *
 zen_expired_request(struct zen_data *zdata, int ddir)
 {
@@ -97,10 +85,6 @@ zen_expired_request(struct zen_data *zdata, int ddir)
         return NULL;
 }
 
-/*
- * zen_check_fifo returns 0 if there are no expired requests on the fifo,
- * otherwise it returns the next expired request
- */
 static struct request *
 zen_check_fifo(struct zen_data *zdata)
 {
@@ -122,10 +106,6 @@ zen_check_fifo(struct zen_data *zdata)
 static struct request *
 zen_choose_request(struct zen_data *zdata)
 {
-        /*
-         * Retrieve request from available fifo list.
-         * Synchronous requests have priority over asynchronous.
-         */
         if (!list_empty(&zdata->fifo_list[SYNC]))
                 return rq_entry_fifo(zdata->fifo_list[SYNC].next);
         if (!list_empty(&zdata->fifo_list[ASYNC]))
@@ -139,7 +119,6 @@ static int zen_dispatch_requests(struct request_queue *q, int force)
 	struct zen_data *zdata = zen_get_data(q);
 	struct request *rq = NULL;
 
-	/* Check for and issue expired requests */
 	if (zdata->batching > zdata->fifo_batch) {
 		zdata->batching = 0;
 		rq = zen_check_fifo(zdata);
@@ -193,7 +172,6 @@ static void zen_exit_queue(struct elevator_queue *e)
 	kfree(zdata);
 }
 
-/* Sysfs */
 static ssize_t
 zen_var_show(int var, char *page)
 {
@@ -285,4 +263,4 @@ module_exit(zen_exit);
 MODULE_AUTHOR("Brandon Berhent");
 MODULE_LICENSE("GPL");
 MODULE_DESCRIPTION("Zen IO scheduler");
-MODULE_VERSION("1.0");
+MODULE_VERSION("2.0");
