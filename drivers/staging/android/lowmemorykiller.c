@@ -98,6 +98,17 @@ static int test_task_flag(struct task_struct *p, int flag)
 	return 0;
 }
 
+static unsigned long get_total_mm_pages(struct mm_struct *mm)
+{
+	unsigned long pages = 0;
+	int i;
+
+	for (i = 0; i < NR_MM_COUNTERS; i++)
+		pages += get_mm_counter(mm, i);
+
+	return pages;
+}
+
 static unsigned long lowmem_scan(struct shrinker *s, struct shrink_control *sc)
 {
 	struct task_struct *tsk;
@@ -189,7 +200,7 @@ static unsigned long lowmem_scan(struct shrinker *s, struct shrink_control *sc)
 			task_unlock(p);
 			continue;
 		}
-		tasksize = get_mm_rss(p->mm);
+		tasksize = get_total_mm_pages(p->mm);
 		task_unlock(p);
 		if (tasksize <= 0)
 			continue;
