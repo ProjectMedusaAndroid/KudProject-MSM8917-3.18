@@ -113,6 +113,7 @@ static unsigned long lowmem_scan(struct shrinker *s, struct shrink_control *sc)
 {
 	struct task_struct *tsk;
 	struct task_struct *selected = NULL;
+	static const struct sched_param sched_zero_prio;
 	unsigned long rem = 0;
 	int tasksize;
 	int i;
@@ -235,8 +236,10 @@ static unsigned long lowmem_scan(struct shrinker *s, struct shrink_control *sc)
 			     min_score_adj,
 			     free);
 		lowmem_deathpending_timeout = jiffies + HZ;
+		do_send_sig_info(SIGKILL, SEND_SIG_FORCED, selected, true);
 		set_tsk_thread_flag(selected, TIF_MEMDIE);
-		send_sig(SIGKILL, selected, 0);
+		sched_setscheduler_nocheck(selected, SCHED_RR, &sched_zero_prio);
+		set_cpus_allowed_ptr(selected, cpu_all_mask);
 		rem += selected_tasksize;
 		rcu_read_unlock();
 	} else
