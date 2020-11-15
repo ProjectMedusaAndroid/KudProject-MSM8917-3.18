@@ -22,19 +22,13 @@
 
 static unsigned int input_boost_freq __read_mostly =
 	CONFIG_INPUT_BOOST_FREQ;
-static unsigned int boost_min_freq __read_mostly =
-        CONFIG_BASE_BOOST_FREQ;
 
 static unsigned short input_boost_duration __read_mostly =
 	CONFIG_INPUT_BOOST_DURATION_MS;
-static unsigned short wake_boost_duration __read_mostly =
-	CONFIG_WAKE_BOOST_DURATION_MS;
 
 module_param(input_boost_freq, uint, 0644);
-module_param_named(remove_input_boost_freq, boost_min_freq, uint, 0644);
 
 module_param(input_boost_duration, short, 0644);
-module_param(wake_boost_duration, short, 0644);
 
 /* Available bits for boost state */
 enum {
@@ -70,7 +64,7 @@ static unsigned int get_min_freq(struct cpufreq_policy *policy)
 {
 	unsigned int freq;
 
-	freq = boost_min_freq;
+	freq = CONFIG_BASE_BOOST_FREQ;
 
 	return max(freq, policy->cpuinfo.min_freq);
 }
@@ -152,11 +146,11 @@ static void __cpu_input_boost_kick_wake(struct boost_drv *b)
 	if (!test_bit(SCREEN_OFF, &b->state))
 		return;
 
-	if (!wake_boost_duration)
+	if (!IS_ENABLED(CONFIG_WAKE_BOOST_DURATION_MS))
 		return;
 
 	set_bit(WAKE_BOOST, &b->state);
-	__cpu_input_boost_kick_max(b, wake_boost_duration);
+	__cpu_input_boost_kick_max(b, CONFIG_WAKE_BOOST_DURATION_MS);
 }
 
 void cpu_input_boost_kick_wake(void)
