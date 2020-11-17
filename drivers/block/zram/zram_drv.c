@@ -39,8 +39,7 @@
 
 /* Globals */
 static int zram_major;
-static struct zram *zram_devices;
-static const char *default_compressor = CONFIG_ZRAM_DEFAULT_COMP_ALGORITHM;
+static const char *default_compressor = "lz4hc";
 
 /*
  * We don't need to see memory allocation errors more than once every 1
