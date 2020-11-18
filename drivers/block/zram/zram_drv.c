@@ -279,7 +279,33 @@ static ssize_t mem_used_max_store(struct device *dev,
 static ssize_t max_comp_streams_store(struct device *dev,
 		struct device_attribute *attr, const char *buf, size_t len)
 {
+	int num;
+	struct zram *zram = dev_to_zram(dev);
+	int ret;
+
+	/* Prevent userspace from changing max_comp_streams */
 	return len;
+
+	ret = kstrtoint(buf, 0, &num);
+	if (ret < 0)
+		return ret;
+	if (num < 1)
+		return -EINVAL;
+
+	down_write(&zram->init_lock);
+	if (init_done(zram)) {
+		if (!zcomp_set_max_streams(zram->comp, num)) {
+			pr_info("Cannot change max compression streams\n");
+			ret = -EINVAL;
+			goto out;
+		}
+	}
+
+	zram->max_comp_streams = num;
+	ret = len;
+out:
+	up_write(&zram->init_lock);
+	return ret;
 }
 
 static ssize_t comp_algorithm_show(struct device *dev,
@@ -812,14 +838,27 @@ static void zram_reset_device(struct zram *zram)
 		return;
 	}
 
-	generic_end_io_acct(rw, &zram->disk->part0, start_time);
+	meta = zram->meta;
+	comp = zram->comp;
+	disksize = zram->disksize;
+	/*
+	 * Refcount will go down to 0 eventually and r/w handler
+	 * cannot handle further I/O so it will bail out by
+	 * check zram_meta_get.
+	 */
+	zram_meta_put(zram);
+	/*
+	 * We want to free zram_meta in process context to avoid
+	 * deadlock between reclaim path and any other locks.
+	 */
+	wait_event(zram->io_done, atomic_read(&zram->refcount) == 0);
 
-	if (unlikely(ret)) {
-		if (rw == READ)
-			atomic64_inc(&zram->stats.failed_reads);
-		else
-			atomic64_inc(&zram->stats.failed_writes);
-	}
+	/* Reset stats */
+	memset(&zram->stats, 0, sizeof(zram->stats));
+	zram->disksize = 0;
+	zram->max_comp_streams = CONFIG_NR_CPUS;
+	set_capacity(zram->disk, 0);
+	part_stat_set_all(&zram->disk->part0, 0);
 
 	up_write(&zram->init_lock);
 	/* I/O operation under all of CPU are done so let's free */
@@ -1244,6 +1283,8 @@ static int create_device(struct zram *zram, int device_id)
 
 	strlcpy(zram->compressor, default_compressor, sizeof(zram->compressor));
 	zram->meta = NULL;
+	zram->max_comp_streams = CONFIG_NR_CPUS;
+	return 0;
 
 	pr_info("Added device: %s\n", zram->disk->disk_name);
 	return device_id;
