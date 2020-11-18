@@ -1807,3 +1807,4 @@ CONFIG_NAMESPACES=y
 #
 # MedusaKernel Specific
 #
+CONFIG_ADRENO_IDLER=y
