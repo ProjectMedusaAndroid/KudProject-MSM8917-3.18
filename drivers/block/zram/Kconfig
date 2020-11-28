@@ -32,3 +32,8 @@ config ZRAM_DEBUG
 	help
 	  This option adds additional debugging code to the compressed
 	  RAM block device driver.
+
+config ZRAM_SIZE_OVERRIDE
+	int "zram size to set from kernel"
+	range 1 8
+	default 2
