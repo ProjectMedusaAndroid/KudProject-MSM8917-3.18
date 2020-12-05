@@ -23,7 +23,6 @@ obj-$(CONFIG_DEVFREQ_GOV_MEMLAT)	+= governor_memlat.o
 obj-$(CONFIG_DEVFREQ_GOV_MSM_ADRENO_PLUS)	+= governor_msm_adreno_plus.o
 obj-$(CONFIG_DEVFREQ_GOV_MSM_ADRENO_BALANCED)	+= governor_msm_adreno_balanced.o
 obj-$(CONFIG_DEVFREQ_GOV_MSM_ADRENO_GUARDIAN)	+= governor_msm_adreno_guardian.o
-obj-$(CONFIG_ADRENO_IDLER)		+= adreno_idler.o
 
 # DEVFREQ Drivers
 obj-$(CONFIG_ARM_EXYNOS4_BUS_DEVFREQ)	+= exynos/
