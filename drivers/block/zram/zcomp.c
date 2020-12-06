@@ -47,7 +47,7 @@ static void zcomp_strm_free(struct zcomp_strm *zstrm)
  * allocate new zcomp_strm structure with ->tfm initialized by
  * backend, return NULL on error
  */
-static struct zcomp_strm *zcomp_strm_alloc(struct zcomp *comp, gfp_t flags)
+static struct zcomp_strm *zcomp_strm_alloc(struct zcomp *comp)
 {
 	struct zcomp_strm *zstrm = kmalloc(sizeof(*zstrm), GFP_KERNEL);
 	if (!zstrm)
