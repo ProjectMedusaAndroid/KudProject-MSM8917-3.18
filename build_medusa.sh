@@ -15,6 +15,9 @@ COMP2=arm-linux-gnueabi-
 export KBUILD_BUILD_USER=Batu33TR
 export KBUILD_BUILD_HOST=AmazonWebServices
 
+# Delete Output
+rm -rf $OUTPUT
+
 # Write .config
 make O=$OUTPUT \
 ARCH=$ARCH \
