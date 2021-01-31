@@ -15,15 +15,15 @@ export ARCH=arm
 export SUBARCH=arm
 
 # Set kernel name and defconfig
-export VERSION=MedusaKernel-v1.7.2-CodeAuroraForum
+export VERSION=ProjectMedusa-v1.8.0-KudProject-A11-Perf
 export DEFCONFIG=j4primelte_caf_defconfig
 
 # Keep it as is
 export LOCALVERSION=-$VERSION
 
 # Export Username and machine name
-export KBUILD_BUILD_USER=Batuu
-export KBUILD_BUILD_HOST=Manjaro
+export KBUILD_BUILD_USER=Batu33TR
+export KBUILD_BUILD_HOST=MicrosoftAzure
 
 # Color definition
 red=`tput setaf 1`
