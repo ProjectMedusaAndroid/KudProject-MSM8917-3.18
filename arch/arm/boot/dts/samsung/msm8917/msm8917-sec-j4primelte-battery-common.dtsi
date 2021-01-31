@@ -108,8 +108,8 @@
 		battery,swelling_high_rechg_voltage = <4000>;
 		battery,swelling_low_rechg_voltage = <4000>;
 
-		battery,siop_input_limit_current = <1600>;
-		battery,siop_charging_limit_current = <1600>;
+		battery,siop_input_limit_current = <1400>;
+		battery,siop_charging_limit_current = <1400>;
 
 		battery,chg_float_voltage = <4350>;
 		battery,mivr_voltage = <1>; /* 0:  4200, 1 : 4300, 2 : 4400 ..... 7: 4900 */
