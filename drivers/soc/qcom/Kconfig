@@ -1057,9 +1057,5 @@ config TIMA_LOG
        default n
        help
          TIMA Log dumping support
-config STATE_NOTIFIER
-        bool "State Notifier"
-
-source "drivers/soc/qcom/memshare/Kconfig"
 
 endif # ARCH_MSM

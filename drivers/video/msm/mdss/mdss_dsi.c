@@ -42,10 +42,6 @@
 #define XO_CLK_RATE	19200000
 #define CMDLINE_DSI_CTL_NUM_STRING_LEN 2
 
-#ifdef CONFIG_STATE_NOTIFIER
-#include <linux/state_notifier.h>
-#endif
-
 /* Master structure to hold all the information about the DSI/panel */
 static struct mdss_dsi_data *mdss_dsi_res;
 
@@ -3036,16 +3032,6 @@ static int mdss_dsi_event_handler(struct mdss_panel_data *pdata,
 		pr_err("[MDSS_EVENT_POST_PANEL_ON]\n");
 		rc = mdss_dsi_post_panel_on(pdata);
 		break;
-	case MDSS_EVENT_PANEL_ON:
-		pr_err("[MDSS_EVENT_PANEL_ON] (%d)\n", ctrl_pdata->on_cmds.link_state);
-#ifdef CONFIG_STATE_NOTIFIER
-		state_resume();
-#endif
-		ctrl_pdata->ctrl_state |= CTRL_STATE_MDP_ACTIVE;
-		if (ctrl_pdata->on_cmds.link_state == DSI_HS_MODE)
-			rc = mdss_dsi_unblank(pdata);
-		pdata->panel_info.esd_rdy = true;
-		break;
 	case MDSS_EVENT_BLANK:
 		pr_err("[MDSS_EVENT_BLANK] (%d)\n", ctrl_pdata->off_cmds.link_state);
 		power_state = (int) (unsigned long) arg;
@@ -3063,9 +3049,6 @@ static int mdss_dsi_event_handler(struct mdss_panel_data *pdata,
 		rc = mdss_dsi_off(pdata, power_state);
 		reinit_completion(&ctrl_pdata->wake_comp);
 		atomic_set(&ctrl_pdata->disp_en, MDSS_DISPLAY_OFF);
-#ifdef CONFIG_STATE_NOTIFIER
-		state_suspend();
-#endif
 		break;
 	case MDSS_EVENT_CONT_SPLASH_FINISH:
 		pr_err("[MDSS_EVENT_CONT_SPLASH_FINISH\n");
