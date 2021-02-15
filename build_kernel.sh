@@ -1,10 +1,8 @@
 #!/bin/bash
 
 # Settings
-export ARCH=arm && export SUBARCH=arm
-export CROSS_COMPILE=$(pwd)/gcc/bin/arm-linux-androideabi-
-export PATH=$(pwd)/gcc/bin:$PATH
 USER=Batu33TR
+HOST=MicrosoftAzure
 CORES=$(echo $(nproc --all) Cores Detected)
 
 # Color definition
@@ -25,34 +23,19 @@ BUILD_START=$(date +"%s")
 DEF4=j4primelte_defconfig
 DEF6=j6primelte_defconfig
 
-# Set Builder's Username
-USER()
-{
-	# Setup KBUILD_BUILD_USER
-	echo "$yellow Current Build Username is $USER $reset"
-	echo " "
-	read -p "Please Type build_user (E.g: Batu33TR) : " user;
-	if [ "${user}" == "" ]; then
-		echo " "
-
-		echo "$yellow     Using '$USER' as Username $reset"
-	else
-		export KBUILD_BUILD_USER=$user
-		echo " "
-		echo "$yellow     Using '$user' as Username $reset"
-	fi
-	sleep 2
+ENVSET() {
+    export ARCH=arm && export SUBARCH=arm
+    export CROSS_COMPILE=$(pwd)/gcc/bin/arm-linux-androideabi-
+    export PATH=$(pwd)/gcc/bin:$PATH
+    export KBUILD_BUILD_USER=$USER
+    export KBUILD_BUILD_HOST=$HOST
 }
 
 J4PLUSMAKE() {
-    export KBUILD_BUILD_USER=$USER
-    export KBUILD_BUILD_HOST=MicrosoftAzure
     make O=out CROSS_COMPILE=arm-linux-androideabi- $DEF4
 }
 
 J6PLUSMAKE() {
-    export KBUILD_BUILD_USER=$USER
-    export KBUILD_BUILD_HOST=MicrosoftAzure
     make O=out CROSS_COMPILE=arm-linux-androideabi- $DEF6
 }
 
@@ -92,10 +75,10 @@ do
     case $opt in
         "Galaxy J4 Plus")
             echo ""
-            echo "$cyan Galaxy J4+ Selected $reset"
+            echo "$cyan Samsung Galaxy J4+ Selected $reset"
             echo ""
-            USER
-            echo ""
+	    ENVSET
+	    echo ""
             J4PLUSMAKE
             echo ""
             BUILDINFO
@@ -108,10 +91,10 @@ do
             ;;
         "Galaxy J6 Plus")
             echo ""
-            echo "$cyan Galaxy J6+ Selected $reset"
+            echo "$cyan Samsung Galaxy J6+ Selected $reset"
             echo ""
-            USER
-            echo ""
+	    ENVSET
+	    echo ""
             J6PLUSMAKE
             echo ""
             BUILDINFO
